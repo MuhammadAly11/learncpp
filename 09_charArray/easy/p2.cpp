@@ -8,7 +8,13 @@ int main() {
 	cout << "Suffix: ";
 	cin >> suffix;
 
-	for (int i = 0; i < suffix.size(); i++) {
+	// fix bug if the prefix is large than input
+	if (suffix.size() > input.size()) {
+		cout << "No\n";
+		return 0;
+	}
+
+	for (int i = 1; i < suffix.size(); i++) { //fixbug: when i=0, it will access size which is out of array size
 		if (suffix[suffix.size() - i] != input[input.size() - i]) {
 			cout << "No\n";
 			return 0;
