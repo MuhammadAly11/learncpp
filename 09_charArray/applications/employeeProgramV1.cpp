@@ -1,3 +1,4 @@
+// assuming user enter valid data
 #include <iostream>
 using namespace std;
 
@@ -28,7 +29,7 @@ int main() {
       cin >> genders[next];
     } else if (choice == 2) {
       cout << "*****************\n";
-      for (int i = 0; i < size; i++) {
+      for (int i = 0; i < next; i++) {
         if (salarys[i]) {
           cout << names[i] << "\t" << ages[i] << "\t" << salarys[i] << "\t"
                << genders[i] << endl;
@@ -43,17 +44,16 @@ int main() {
           ages[i] = 0;
           salarys[i] = 0;
           names[i] = "";
-          genders[i] = ' ';
+          genders[i] = '\0';
         }
       }
     } else if (choice == 4) {
       cout << "Enter name and salary: ";
       string name;
-      cin >> name;
       int salary;
-      cin >> salary;
-      for (int i = 0; i < size; i++) {
-        if (name == names[i]) {
+      cin >> name >> salary;
+      for (int i = 0; i < next; i++) {
+        if (name == names[i] && salarys[i]) {
           salarys[i] = salary;
         }
       }
