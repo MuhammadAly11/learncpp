@@ -2,6 +2,10 @@
 using namespace std;
 
 bool is_prime(int num) {
+  // fix bug: 1st prime is 2. don't check numbers < 2.
+  if (num <= 1)
+    return false;
+
   for (int i = 2; i < num; i++) {
     if (num % i == 0)
       return false;

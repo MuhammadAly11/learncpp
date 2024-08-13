@@ -11,6 +11,10 @@ void get_input(string &str, string &pattern, string &replacement) {
 }
 
 bool start_with(const string &input, const string &pattern, int pos) {
+  // fix bug: don't access out of boundry
+  if (pos + pattern.length() > input.length())
+    return false;
+
   for (int i = 0; i < pattern.length(); i++) {
     if (input[pos + i] != pattern[i]) {
       return 0;
