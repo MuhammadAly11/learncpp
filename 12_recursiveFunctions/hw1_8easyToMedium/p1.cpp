@@ -2,8 +2,6 @@
 using namespace std;
 
 int length_3n_plus_1(int num){
-    int length {};
-
     if (num == 1)
         return 1;
 
