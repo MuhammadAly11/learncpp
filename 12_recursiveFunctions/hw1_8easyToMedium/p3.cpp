@@ -9,7 +9,8 @@ int max2(int a, int b) {
 }
 
 int arr_max(int arr[], int len) {
-  if (len == 0) {
+  // fix bug: don't count arr[0] 2 times
+  if (len == 1) {
     return arr[0];
   }
   return max2(arr[len - 1], arr_max(arr, len - 1));
