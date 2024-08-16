@@ -41,11 +41,24 @@ int count_patients(const int specialization) {
   return cnt;
 }
 
-void prepend(int specialization, const string &name) {
-  for (int i = QUEUE; i > 1; i--) {
-    patients[specialization][i - 1] = patients[specialization][i - 2];
-    statuses[specialization][i - 1] = statuses[specialization][i - 2];
+void rearrange_patients(int specialization, int move) {
+  if (move == 1)
+    for (int i = QUEUE; i > 1; i--) {
+      patients[specialization][i - 1] = patients[specialization][i - 2];
+      statuses[specialization][i - 1] = statuses[specialization][i - 2];
+    }
+  else if (move == -1) {
+    for (int i = 0; i < QUEUE - 1; i++) {
+      patients[specialization][i] = patients[specialization][i + 1];
+      statuses[specialization][i] = statuses[specialization][i + 1];
+    }
+    patients[specialization][QUEUE - 1] = "";
+    statuses[specialization][QUEUE - 1] = -1;
   }
+}
+
+void prepend(int specialization, const string &name) {
+  rearrange_patients(specialization, 1);
   patients[specialization][0] = name;
   statuses[specialization][0] = 1;
 }
@@ -121,6 +134,21 @@ bool print_all() {
   return 1;
 }
 
+bool get_patient() {
+  int specialization;
+  cout << "Enter specialization: ";
+  cin >> specialization;
+
+  specialization--;
+  if (patients[specialization][0] == "") {
+    cout << "No patients at moment. Have rest, Dr\n\n";
+    return 0;
+  }
+  cout << patients[specialization][0] << ", Please go with the Dr\n\n";
+  rearrange_patients(specialization, -1);
+  return 1;
+}
+
 void hospital() {
   int cnt{};
   while (true) {
@@ -130,7 +158,7 @@ void hospital() {
     } else if (choice == 2) {
       cnt += print_all();
     } else if (choice == 3) {
-
+      cnt += get_patient();
     } else {
       break;
     }
