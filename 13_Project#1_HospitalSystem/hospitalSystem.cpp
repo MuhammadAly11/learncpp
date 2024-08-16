@@ -13,7 +13,7 @@ int choose() {
          << "2) Print all patients\n"
          << "3) Get next patient\n"
          << "4) Exit\n"
-         << "Enter your choice:";
+         << "Enter your choice: ";
     cin >> choice;
     if (1 > choice || choice > 4) {
       cout << "Invalid input, Try agian.\n\n";
@@ -33,26 +33,26 @@ bool valid_patient(int &specialization, string &name, int &status) {
 }
 
 int count_patients(const int specialization) {
-  int cnt{specialization};
+  int cnt{};
   for (int i = 0; i < QUEUE; i++) {
-    if (statuses[specialization][i] == -1)
-      cnt--;
+    if (statuses[specialization][i] != -1)
+      cnt++;
   }
   return cnt;
 }
 
 void prepend(int specialization, const string &name) {
   for (int i = QUEUE; i > 1; i--) {
-    patients[specialization][i-1] = patients[specialization][i-2]; 
-    statuses[specialization][i-1] = statuses[specialization][i-2]; 
+    patients[specialization][i - 1] = patients[specialization][i - 2];
+    statuses[specialization][i - 1] = statuses[specialization][i - 2];
   }
-  patients[specialization][0] = name; 
+  patients[specialization][0] = name;
   statuses[specialization][0] = 1;
 }
 
 void append(int specialization, const string &name) {
   int next = count_patients(specialization);
-  patients[specialization][next] = name; 
+  patients[specialization][next] = name;
   statuses[specialization][next] = 0;
 }
 
@@ -75,6 +75,51 @@ bool add_patient() {
   return 1;
 }
 
+void set_array_negative1(int a[], int len) {
+  for (int i = 0; i < len; i++) {
+    a[i] = -1;
+  }
+}
+
+bool get_occupied(int arr[], int len) {
+  int next{};
+  for (int i = 0; i < len; i++) {
+    if (count_patients(i)) {
+      arr[next] = i;
+      next++;
+    }
+  }
+  return next;
+}
+
+bool print_all() {
+  int occupied[SPECIALIZATIONS];
+  set_array_negative1(occupied, SPECIALIZATIONS);
+  if (!get_occupied(occupied, SPECIALIZATIONS)) {
+    cout << "There's no patients right now. Add some patients\n\n";
+    return 0;
+  }
+
+  cout << "****************************************\n";
+  for (int i = 0; i < SPECIALIZATIONS; i++) {
+    if (occupied[i] != -1) {
+      cout << "There are " << count_patients(occupied[i])
+           << " patients in specialization " << occupied[i] << ":\n";
+      for (int j = 0; j < QUEUE; j++) {
+        if (statuses[occupied[i]][j] != -1) {
+          cout << patients[occupied[i]][j];
+          if (statuses[occupied[i]][j])
+            cout << " Urgent\n";
+          else
+            cout << " Normal\n";
+        }
+      }
+      cout << endl;
+    }
+  }
+  return 1;
+}
+
 void hospital() {
   int cnt{};
   while (true) {
@@ -82,7 +127,7 @@ void hospital() {
     if (choice == 1) {
       cnt += add_patient();
     } else if (choice == 2) {
-      // cnt += print_all();
+      cnt += print_all();
     } else if (choice == 3) {
 
     } else {
@@ -92,14 +137,14 @@ void hospital() {
   cout << "You have done " << cnt << " successful operations.\n";
 }
 
-void set_arrays() {
+void set_statses() {
   for (int i = 0; i < SPECIALIZATIONS; i++)
     for (int j = 0; j < QUEUE; j++)
       statuses[i][j] = -1;
 }
 
 int main() {
-  set_arrays();
+  set_statses();
   hospital();
 
   return 0;
