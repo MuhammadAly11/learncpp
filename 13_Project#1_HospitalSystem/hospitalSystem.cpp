@@ -63,6 +63,7 @@ bool add_patient() {
     cout << "Invalid input. try agian.\n\n";
     return 0;
   }
+  specialization--;
   if (count_patients(specialization) == QUEUE) {
     cout << "Sorry we can't add more patients for this specialization\n\n";
     return 0;
@@ -104,7 +105,7 @@ bool print_all() {
   for (int i = 0; i < SPECIALIZATIONS; i++) {
     if (occupied[i] != -1) {
       cout << "There are " << count_patients(occupied[i])
-           << " patients in specialization " << occupied[i] << ":\n";
+           << " patients in specialization " << occupied[i] + 1 << ":\n";
       for (int j = 0; j < QUEUE; j++) {
         if (statuses[occupied[i]][j] != -1) {
           cout << patients[occupied[i]][j];
