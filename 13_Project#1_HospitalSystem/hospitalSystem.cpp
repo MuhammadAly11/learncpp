@@ -2,7 +2,7 @@
 using namespace std;
 
 const int SPECIALIZATIONS = 15;
-const int QUEUE = 15;
+const int QUEUE = 5;
 string patients[SPECIALIZATIONS][QUEUE]{};
 int statuses[SPECIALIZATIONS][QUEUE];
 
