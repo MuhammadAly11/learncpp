@@ -25,6 +25,7 @@ struct queue {
   }
 
   void remove_front() {
+    cout << arr[0] << endl;
     for (int i = 1; i < added; i++) {
       arr[i - 1] = arr[i];
     }
@@ -49,19 +50,26 @@ struct queue {
   }
 };
 
-int main() { 
+int main() {
   queue list;
   for (int i = 0; i < 5; i++) {
-    list.arr[i] = i;
-    list.added++;
+    list.add_end(i);
   }
 
   list.print();
   list.add_end(8);
+  list.print();
   list.add_end(8);
+  list.print();
   list.add_end(8);
+  list.print();
   list.add_end(8);
+  list.print();
   list.add_end(8);
+  list.print();
+  list.remove_front();
+  list.print();
+  list.remove_front();
   list.print();
   list.add_front(7);
   list.print();
@@ -70,4 +78,5 @@ int main() {
   list.remove_front();
   list.print();
 
-  return 0; }
+  return 0;
+}
