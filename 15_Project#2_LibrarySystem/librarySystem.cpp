@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio>
 #include <iostream>
 using namespace std;
 
@@ -17,8 +18,8 @@ struct user {
 };
 
 struct borrowing {
-  int book_idx[MAX_SIZE];
-  int user_idx[MAX_SIZE];
+  int book_id[MAX_SIZE];
+  int user_id[MAX_SIZE];
   int len{};
 };
 
@@ -75,6 +76,14 @@ struct library_books {
   int find(const string &name) {
     for (int i = 0; i < len; i++) {
       if (books[i].name == name) {
+        return books[i].id;
+      }
+    }
+    return -1;
+  }
+  int find(int id) {
+    for (int i = 0; i < len; i++) {
+      if (books[i].id == id) {
         return i;
       }
     }
@@ -101,6 +110,15 @@ struct library_users {
   int find(const string &username) {
     for (int i = 0; i < len; i++) {
       if (users[i].name == username) {
+        return users[i].id;
+      }
+    }
+    return -1;
+  }
+
+  int find(int id) {
+    for (int i = 0; i < len; i++) {
+      if (users[i].id == id) {
         return i;
       }
     }
@@ -112,25 +130,25 @@ void borrow(library_users &users, library_books &library, borrowing &borrows) {
   string username, bookname;
   cout << "Enter user name & book name: ";
   cin >> username >> bookname;
-  int user_idx = users.find(username);
-  if (user_idx == -1) {
+  int user_id = users.find(username);
+  if (user_id == -1) {
     cout << "This user isn't in our database.\n";
     return;
   }
-  int book_idx = library.find(bookname);
-  if (book_idx == -1) {
+  int book_id = library.find(bookname);
+  if (book_id == -1) {
     cout << "This book isn't in our database.\n";
     return;
   }
-  if (!library.books[book_idx].quantity) {
-    cout << "Sorry, Book quantity is zero\n";
+  if (library.books[library.find(book_id)].quantity <=
+      library.books[library.find(book_id)].borrowed) {
+    cout << "Sorry, Book total quantity is zero\n";
     return;
   }
-  borrows.user_idx[borrows.len] = user_idx;
-  borrows.book_idx[borrows.len] = book_idx;
+  borrows.user_id[borrows.len] = user_id;
+  borrows.book_id[borrows.len] = book_id;
   borrows.len++;
-  library.books[book_idx].borrowed++;
-  library.books[book_idx].quantity--;
+  library.books[library.find(book_id)].borrowed++;
 }
 
 void return_book(library_users &users, library_books &library,
@@ -138,24 +156,23 @@ void return_book(library_users &users, library_books &library,
   cout << "Enter user name & book name: ";
   string username, bookname;
   cin >> username >> bookname;
-  int user_idx = users.find(username);
-  if (user_idx == -1) {
+  int user_id = users.find(username);
+  if (user_id == -1) {
     cout << "This user isn't in our database.\n";
     return;
   }
-  int book_idx = library.find(bookname);
-  if (book_idx == -1) {
+  int book_id = library.find(bookname);
+  if (book_id == -1) {
     cout << "This book isn't in our database.\n";
     return;
   }
   for (int i = 0; i < borrows.len; i++) {
-    if (borrows.book_idx[i] == book_idx && borrows.user_idx[i] == user_idx) {
-      borrows.book_idx[i] = -1;
-      borrows.user_idx[i] = -1;
+    if (borrows.book_id[i] == book_id && borrows.user_id[i] == user_id) {
+      borrows.book_id[i] = -1;
+      borrows.user_id[i] = -1;
     }
   }
-  library.books[book_idx].borrowed--;
-  library.books[book_idx].quantity++;
+  library.books[library.find(book_id)].borrowed--;
 }
 
 void print_borrowers(library_users &users, library_books &library,
@@ -163,14 +180,15 @@ void print_borrowers(library_users &users, library_books &library,
   cout << "Enter book name: ";
   string name;
   cin >> name;
-  int book_idx = library.find(name);
-  if (book_idx == -1) {
+  int book_id = library.find(name);
+  if (book_id == -1) {
     cout << "This book isn't in our database.\n";
     return;
   }
   for (int i = 0; i < borrows.len; i++) {
-    if (borrows.book_idx[i] == book_idx) {
-      cout << users.users[borrows.user_idx[i]].name << "\n";
+    if (borrows.book_id[i] == book_id) {
+      int id = borrows.user_id[i];
+      cout << users.users[users.find(id)].name << "\n";
     }
   }
 }
@@ -181,8 +199,8 @@ void print_users(library_users &users, library_books &library,
     cout << "user " << users.users[i].name << ", id " << users.users[i].id
          << ", borrowed books ids: ";
     for (int j = 0; j < borrows.len; j++) {
-      if (i == borrows.user_idx[j]) {
-        cout << library.books[borrows.book_idx[j]].id << " ";
+      if (users.users[i].id == borrows.user_id[j]) {
+        cout << borrows.book_id[j] << " ";
       }
     }
     cout << "\n";
@@ -219,12 +237,13 @@ int menu() {
 }
 
 void libSystem() {
+  freopen("c.in", "r", stdin);
   library_books library;
   library_users users;
   borrowing borrows;
   for (int i = 0; i < MAX_SIZE; i++) {
-    borrows.book_idx[i] = -1;
-    borrows.user_idx[i] = -1;
+    borrows.book_id[i] = -1;
+    borrows.user_id[i] = -1;
   }
   print_menu();
   while (true) {
