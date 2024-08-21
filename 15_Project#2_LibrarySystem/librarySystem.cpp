@@ -9,12 +9,17 @@ struct book {
   string name;
   int quantity;
   int borrowed{};
-  string borrowers[MAX_SIZE];
 };
 
 struct user {
   string name;
   int id{};
+};
+
+struct borrowing {
+  int book_idx[MAX_SIZE];
+  int user_idx[MAX_SIZE];
+  int len{};
 };
 
 bool is_prefix(const string &str, const string &pre) {
@@ -66,15 +71,79 @@ struct library_books {
            << books[i].borrowed << endl;
     }
   }
+
+  int find(const string &name) {
+    for (int i = 0; i < len; i++) {
+      if (books[i].name == name) {
+        return i;
+      }
+    }
+    return -1;
+  }
 };
 
 struct library_users {
   user users[MAX_SIZE];
+  int len{};
 
-  void add(string name, int id) {}
+  void add() {
+    int id;
+    string name;
+    cout << "Enter your name & national id: ";
+    cin >> name >> id;
+    users[len].id = id;
+    users[len].name = name;
+    len++;
+  }
 
   void print() {}
+
+  int find(const string &username) {
+    for (int i = 0; i < len; i++) {
+      if (users[i].name == username) {
+        return i;
+      }
+    }
+    return -1;
+  }
 };
+
+void borrow(library_users &users, library_books &library, borrowing &borrows) {
+  static int len{};
+  string username, bookname;
+  cout << "Enter user name & book name: ";
+  cin >> username >> bookname;
+  int user_idx = users.find(username);
+  if (user_idx == -1) {
+    cout << "This user isn't in our database.\n";
+    return;
+  }
+  int book_idx = library.find(bookname);
+  if (book_idx == -1) {
+    cout << "This book isn't in our database.\n";
+    return;
+  }
+  borrows.user_idx[borrows.len] = user_idx;
+  borrows.book_idx[borrows.len] = book_idx;
+  borrows.len++;
+  library.books[book_idx].borrowed++;
+  library.books[book_idx].quantity--;
+}
+
+void print_borrowers(library_users &users, library_books &library, borrowing &borrows) {
+  cout << "Enter book name: ";
+  string name; cin >> name;
+  int book_idx = library.find(name);
+  if (book_idx == -1) {
+    cout << "This book isn't in our database.\n";
+    return;
+  }
+  for (int i = 0; i < borrows.len; i++) {
+    if (borrows.book_idx[i] == book_idx) {
+      cout << users.users[borrows.user_idx[i]].name << "\n";
+    }
+  }
+}
 
 void print_menu() {
   cout << "\nLibrary Menu: \n"
@@ -108,6 +177,7 @@ int menu() {
 void libSystem() {
   library_books library;
   library_users users;
+  struct borrowing borrows;
   print_menu();
   while (true) {
     int choice = menu();
@@ -117,10 +187,16 @@ void libSystem() {
       library.add();
     else if (choice == 2)
       library.search();
+    else if (choice == 3)
+      print_borrowers(users, library, borrows);
     else if (choice == 4)
       library.print();
     else if (choice == 5)
       library.print("name");
+    else if (choice == 6)
+      users.add();
+    else if (choice == 7)
+      borrow(users, library, borrows);
     else if (choice == 10)
       print_menu();
   }
