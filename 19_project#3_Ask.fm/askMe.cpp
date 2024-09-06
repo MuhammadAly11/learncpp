@@ -1,15 +1,35 @@
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <sstream>
 #include <string>
 
-struct user {
+const std::string USERS_FILE{"users.txt"};
+const std::string QESTIONS_FILE{"questions.txt"};
+
+std::fstream open_file(bool write) {
+  std::fstream usersio;
+  if (write) {
+    usersio.open(USERS_FILE, std::ios::app);
+  } else {
+    usersio.open(USERS_FILE, std::ios::in);
+  }
+  if (usersio.fail()) {
+    std::cerr << "Error opennig file.\n";
+    exit(1);
+  }
+  return usersio;
+}
+
+struct User {
   std::string user_name, name, password, email;
   int id;
+  int cur_id;
   bool aq;
 
-  void add(std::ofstream &users) {
+  void add() {
     std::cout << "Enter username (nospaces): ";
     std::cin >> user_name;
     std::cout << "Enter password: ";
@@ -21,26 +41,53 @@ struct user {
     std::cout << "Allow anonymous questions? (0 or 1): ";
     std::cin >> aq;
 
-    saveToFile(users);
+    saveToFile();
+    cur_id++;
   }
 
-  void saveToFile(std::ofstream &users) {
+  bool login() {
+    std::cout << "Enter username & password: ";
+    std::cin >> user_name >> password;
+    if (find_user() == -1) {
+      std::cout << "This user isn't in our database.\n";
+      return false;
+    }
+    return true;
+  }
+
+  int find_user() {
+    std::fstream users = open_file(false);
+    std::string line;
+    while (getline(users, line)) {
+      if (line.find(user_name) != std::string::npos &&
+          line.find(password) != std::string::npos) {
+        std::stringstream ss(line);
+        while (std::getline(ss, line, ',')) {
+          users >> id;
+          users >> user_name;
+          users >> password;
+          users >> name;
+          users >> email;
+          users >> aq;
+          users.close();
+          return id;
+        }
+      }
+    }
+    users.close();
+    return -1;
+  }
+
+  void saveToFile() {
+    std::fstream users = open_file(true);
     users << id << "," << user_name << "," << password << "," << name << ","
           << email << "," << aq << "\n";
+    users.close();
   }
 };
 
 struct askme_sys {
   bool logedin{false};
-  std::ofstream users;
-
-  askme_sys() {
-    users.open("users.txt", std::ios::app);
-    if (users.fail()) {
-      std::cerr << "Error opennig file.\n";
-      exit(1);
-    }
-  }
 
   int menu(bool logedin) {
     int choice{};
@@ -67,12 +114,12 @@ struct askme_sys {
 
   void run() {
     int choice;
+    User user;
     while ((choice = menu(logedin)) && choice != 8) {
       if (choice == 1 && !logedin) {
-        // user.login();
+        logedin = user.login();
       } else if (choice == 2 && !logedin) {
-        user new_user;
-        new_user.add(users);
+        user.add();
         logedin = true;
       }
     }
