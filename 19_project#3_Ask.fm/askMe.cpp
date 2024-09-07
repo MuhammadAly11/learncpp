@@ -9,24 +9,34 @@
 const std::string USERS_FILE{"users.txt"};
 const std::string QESTIONS_FILE{"questions.txt"};
 
-std::fstream open_file(bool write) {
+std::fstream open_file(std::string outFile, bool write = false) {
   std::fstream usersio;
   if (write) {
-    usersio.open(USERS_FILE, std::ios::app);
+    usersio.open(outFile, std::ios::out | std::ios::app);
   } else {
-    usersio.open(USERS_FILE, std::ios::in);
+    usersio.open(outFile, std::ios::in);
   }
   if (usersio.fail()) {
-    std::cerr << "Error opennig file.\n";
+    std::cerr << "Error opening file.\n";
     exit(1);
   }
   return usersio;
 }
 
+std::string getLastLine(std::string File) {
+  std::fstream users = open_file(File);
+  std::string last_line, cur_line;
+  while (std::getline(users, cur_line)) {
+    if (!cur_line.empty())
+      last_line = cur_line;
+  }
+  users.close();
+  return last_line;
+}
+
 struct User {
   std::string user_name, name, password, email;
   int id;
-  int cur_id;
   bool aq;
 
   void add() {
@@ -40,9 +50,9 @@ struct User {
     std::cin >> email;
     std::cout << "Allow anonymous questions? (0 or 1): ";
     std::cin >> aq;
+    id = lastId() + 1;
 
     saveToFile();
-    cur_id++;
   }
 
   bool login() {
@@ -56,7 +66,7 @@ struct User {
   }
 
   int find_user() {
-    std::fstream users = open_file(false);
+    std::fstream users = open_file(USERS_FILE);
     std::string line;
     while (getline(users, line)) {
       if (line.find(user_name) != std::string::npos &&
@@ -79,10 +89,18 @@ struct User {
   }
 
   void saveToFile() {
-    std::fstream users = open_file(true);
+    std::fstream users = open_file(USERS_FILE, true);
     users << id << "," << user_name << "," << password << "," << name << ","
           << email << "," << aq << "\n";
     users.close();
+  }
+
+  int lastId() {
+    std::string last_user = getLastLine(USERS_FILE);
+    std::stringstream ss(last_user);
+    std::string last_id;
+    std::getline(ss, last_id, ',');
+    return std::stoi(last_id);
   }
 };
 
