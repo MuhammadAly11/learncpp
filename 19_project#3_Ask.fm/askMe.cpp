@@ -39,53 +39,76 @@ struct User {
   int id;
   bool aq;
 
-  void add() {
+  bool signup() {
     std::cout << "Enter username (nospaces): ";
     std::cin >> user_name;
     std::cout << "Enter password: ";
     std::cin >> password;
     std::cout << "Enter name: ";
-    std::cin >> name;
+    std::cin.ignore();
+    std::getline(std::cin, name);
     std::cout << "Enter email: ";
     std::cin >> email;
     std::cout << "Allow anonymous questions? (0 or 1): ";
     std::cin >> aq;
     id = lastId() + 1;
-
+    std::string user = findUser();
+    if (!user.empty()) {
+      std::cout << "This user name is already taken.\n";
+      return false;
+    }
     saveToFile();
+    return true;
   }
 
   bool login() {
     std::cout << "Enter username & password: ";
     std::cin >> user_name >> password;
-    if (find_user() == -1) {
-      std::cout << "This user isn't in our database.\n";
+    std::string user = findUser();
+    if (user.empty() || user == user_name) {
+      std::cout << "Wrong username or password.\n";
       return false;
     }
+    // Accept user and set user data
+    userData(user);
     return true;
   }
 
-  int find_user() {
-    std::fstream users = open_file(USERS_FILE);
+  std::string findUser() {
     std::string line;
+    std::fstream users = open_file(USERS_FILE);
+    std::string tmp_user = ',' + user_name + ',',
+                tmp_password = ',' + password + ',';
     while (getline(users, line)) {
-      if (line.find(user_name) != std::string::npos &&
-          line.find(password) != std::string::npos) {
-        std::stringstream ss(line);
-        while (std::getline(ss, line, ',')) {
-          users >> id;
-          users >> user_name;
-          users >> password;
-          users >> name;
-          users >> email;
-          users >> aq;
-          users.close();
-          return id;
-        }
+      if (line.find(tmp_user) != std::string::npos &&
+          line.find(tmp_password) != std::string::npos) {
+        users.close();
+        return line;
+      } else if (line.find(tmp_user) != std::string::npos) {
+        users.close();
+        return user_name;
       }
     }
     users.close();
-    return -1;
+    return "";
+  }
+
+  void userData(std::string user) {
+    std::stringstream ss(user);
+    std::string tmp;
+
+    std::getline(ss, tmp, ',');
+    id = std::stoi(tmp);
+    std::getline(ss, tmp, ',');
+    user_name = tmp;
+    std::getline(ss, tmp, ',');
+    password = tmp;
+    std::getline(ss, tmp, ',');
+    name = tmp;
+    std::getline(ss, tmp, ',');
+    email = tmp;
+    std::getline(ss, tmp, ',');
+    aq = std::stoi(tmp);
   }
 
   void saveToFile() {
@@ -97,6 +120,8 @@ struct User {
 
   int lastId() {
     std::string last_user = getLastLine(USERS_FILE);
+    if (last_user.empty())
+      return 0;
     std::stringstream ss(last_user);
     std::string last_id;
     std::getline(ss, last_id, ',');
@@ -137,8 +162,7 @@ struct askme_sys {
       if (choice == 1 && !logedin) {
         logedin = user.login();
       } else if (choice == 2 && !logedin) {
-        user.add();
-        logedin = true;
+        logedin = user.signup();
       }
     }
   }
