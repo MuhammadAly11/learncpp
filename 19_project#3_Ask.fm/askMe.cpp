@@ -39,6 +39,20 @@ struct User {
   int id;
   bool aq;
 
+  void print() {
+    std::fstream users = open_file(USERS_FILE);
+    std::string user, tmp;
+    while (std::getline(users, user)) {
+      std::stringstream ss(user);
+      std::getline(ss, tmp, ',');
+      std::cout << "ID: " << tmp;
+      std::getline(ss, tmp, ',');
+      std::getline(ss, tmp, ',');
+      std::getline(ss, tmp, ',');
+      std::cout << "\tName: " << tmp << "\n";
+    }
+  }
+
   bool signup() {
     std::cout << "Enter username (nospaces): ";
     std::cin >> user_name;
@@ -163,6 +177,8 @@ struct askme_sys {
         logedin = user.login();
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
+      } else if (choice == 6) {
+        user.print();
       }
     }
   }
