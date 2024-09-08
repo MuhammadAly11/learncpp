@@ -5,9 +5,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 const std::string USERS_FILE{"users.txt"};
-const std::string QESTIONS_FILE{"questions.txt"};
+const std::string QUESTIONS_FILE{"questions.txt"};
 
 std::fstream open_file(std::string outFile, bool write = false) {
   std::fstream usersio;
@@ -35,6 +36,7 @@ std::string getLastLine(std::string File) {
 }
 
 struct User {
+  std::vector<std::string> question; // id, q|t|a, from, to, qt, answers
   std::string user_name, name, password, email;
   int id;
   bool aq;
@@ -71,7 +73,7 @@ struct User {
       std::cout << "This user name is already taken.\n";
       return false;
     }
-    saveToFile();
+    saveToUsers();
     return true;
   }
 
@@ -125,7 +127,7 @@ struct User {
     aq = std::stoi(tmp);
   }
 
-  void saveToFile() {
+  void saveToUsers() {
     std::fstream users = open_file(USERS_FILE, true);
     users << id << "," << user_name << "," << password << "," << name << ","
           << email << "," << aq << "\n";
@@ -140,6 +142,38 @@ struct User {
     std::string last_id;
     std::getline(ss, last_id, ',');
     return std::stoi(last_id);
+  }
+
+  void inputQuestion() {
+    std::string tmp;
+    question.push_back(std::to_string(id)); // form
+    std::cout << "Enter user id or -1 to cancel: ";
+    std::cin >> tmp;
+    question.push_back(tmp); // to
+    // // TODO: implemnt this
+    // if (false)
+    //   std::cout << "Note: Anonymous question are not allowed for this user\n";
+    std::cout << "For thread question: Enter question id or -1 for new question: ";
+    std::cin >> tmp;
+    question.push_back(tmp); // new or thread
+    std::cout << "Enter question text: ";
+    std::cin.ignore();
+    std::getline(std::cin, tmp); // text of question
+    question.push_back(tmp);
+  }
+
+  void saveToQusetions() {
+    std::fstream qfile = open_file(QUESTIONS_FILE, true);
+    for (auto value : question) {
+      qfile << value << ",";
+    }
+    qfile << "\n";
+    qfile.close();
+  }
+
+  void ask() {
+    inputQuestion();
+    saveToQusetions();
   }
 };
 
@@ -177,6 +211,8 @@ struct askme_sys {
         logedin = user.login();
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
+      } else if (choice == 5) {
+        user.ask();
       } else if (choice == 6) {
         user.print();
       }
