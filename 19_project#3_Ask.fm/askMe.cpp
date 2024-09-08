@@ -150,10 +150,11 @@ struct User {
     std::cout << "Enter user id or -1 to cancel: ";
     std::cin >> tmp;
     question.push_back(tmp); // to
-    // // TODO: implemnt this
-    // if (false)
-    //   std::cout << "Note: Anonymous question are not allowed for this user\n";
-    std::cout << "For thread question: Enter question id or -1 for new question: ";
+    // TODO: implemnt this
+    if (false)
+      std::cout << "Note: Anonymous question are not allowed for this user\n ";
+    std::cout
+        << "For thread question: Enter question id or -1 for new question: ";
     std::cin >> tmp;
     question.push_back(tmp); // new or thread
     std::cout << "Enter question text: ";
@@ -171,9 +172,51 @@ struct User {
     qfile.close();
   }
 
+  std::vector<std::string> getQuestions(int user_id) {
+    int to_user = 2;
+    std::vector<std::string> v;
+    std::fstream qfile = open_file(QUESTIONS_FILE);
+    std::string line;
+
+    while (std::getline(qfile, line)) {
+      if (line.find(std::to_string(id))) {
+        std::stringstream ss(line);
+        std::string tmp;
+        while (to_user--) {
+          std::getline(ss, tmp, ',');
+        }
+        if (tmp == std::to_string(id))
+          v.push_back(line);
+      }
+    }
+
+    qfile.close();
+    return v;
+  }
+
+  std::vector<std::string> getQuestionDataFromLine(std::string line) {
+    std::string tmp;
+    std::vector<std::string> v;
+    std::stringstream ss(line);
+    while (std::getline(ss, tmp, ',')) {
+      v.push_back(tmp);
+    }
+    return v;
+  }
+
   void ask() {
     inputQuestion();
     saveToQusetions();
+  }
+
+  void printToMe() {
+    auto questions = getQuestions(id);
+    for (auto line : questions) {
+      auto question = getQuestionDataFromLine(line);
+      std::cout << "Question Id (0) form user id(" << question.at(0)
+                << ") \t Question: " << question.at(3) << "\n";
+                // << "Answer: " << question.at(4) << "\n";
+    }
   }
 };
 
@@ -211,6 +254,8 @@ struct askme_sys {
         logedin = user.login();
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
+      } else if (choice == 1) {
+        user.printToMe();
       } else if (choice == 5) {
         user.ask();
       } else if (choice == 6) {
