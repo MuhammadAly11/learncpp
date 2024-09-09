@@ -194,14 +194,12 @@ struct User {
     return v;
   }
 
-  std::vector<std::string> getQuestionDataFromLine(std::string line) {
+  void getQuestionDataFromLine(std::string line) {
     std::string tmp;
-    std::vector<std::string> v;
     std::stringstream ss(line);
     while (std::getline(ss, tmp, ',')) {
-      v.push_back(tmp);
+      question.push_back(tmp);
     }
-    return v;
   }
 
   void ask() {
@@ -212,7 +210,7 @@ struct User {
   void printToMe() {
     auto questions = getQuestions(id);
     for (auto line : questions) {
-      auto question = getQuestionDataFromLine(line);
+      getQuestionDataFromLine(line);
       std::cout << "Question Id (0) form user id(" << question.at(0)
                 << ") \t Question: " << question.at(3) << "\n";
                 // << "Answer: " << question.at(4) << "\n";
