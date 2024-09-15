@@ -9,6 +9,8 @@
 
 const std::string USERS_FILE{"users.txt"};
 const std::string QUESTIONS_FILE{"questions.txt"};
+const int q_id = 1, q_form_user = 2, q_to_user = 3, q_type = 4, q_text = 5,
+          q_answer = 6; // number of colomns in question vector and file
 
 std::fstream open_file(std::string outFile, bool write = false) {
   std::fstream usersio;
@@ -36,7 +38,7 @@ std::string getLastLine(std::string File) {
 }
 
 struct User {
-  std::vector<std::string> question; // id, q|t|a, from, to, qt, answers
+  std::vector<std::string> question; // id, from, to, n|t, qt, answers
   std::string user_name, name, password, email;
   int id;
   bool aq;
@@ -67,7 +69,7 @@ struct User {
     std::cin >> email;
     std::cout << "Allow anonymous questions? (0 or 1): ";
     std::cin >> aq;
-    id = lastId() + 1;
+    id = lastId(USERS_FILE) + 1;
     std::string user = findUser();
     if (!user.empty()) {
       std::cout << "This user name is already taken.\n";
@@ -134,10 +136,10 @@ struct User {
     users.close();
   }
 
-  int lastId() {
-    std::string last_user = getLastLine(USERS_FILE);
+  int lastId(std::string file) {
+    std::string last_user = getLastLine(file);
     if (last_user.empty())
-      return 0;
+      return 100;
     std::stringstream ss(last_user);
     std::string last_id;
     std::getline(ss, last_id, ',');
@@ -146,6 +148,8 @@ struct User {
 
   void inputQuestion() {
     question.clear();
+    int last_question_id = lastId(QUESTIONS_FILE);
+    question.push_back(std::to_string(++last_question_id)); // Q id
     std::string tmp;
     question.push_back(std::to_string(id)); // form
     std::cout << "Enter user id or -1 to cancel: ";
@@ -179,7 +183,8 @@ struct User {
     std::string line;
     std::string str_id = std::to_string(user_id);
 
-    while (std::getline(qfile, line) && line.find(str_id) != std::string::npos) {
+    while (std::getline(qfile, line) &&
+           line.find(str_id) != std::string::npos) {
       int times = pos;
       std::stringstream ss(line);
       std::string tmp;
@@ -204,9 +209,12 @@ struct User {
   }
 
   void printQuestion() {
-    std::cout << "Question Id (0) form user id(" << question.at(0)
-              << ") \t Question: " << question.at(3) << "\n";
+    std::cout << "Question Id (" << question.at(q_id - 1) << ") form user id("
+              << question.at(q_form_user - 1)
+              << ") \t Question: " << question.at(q_text - 1) << "\n";
   }
+
+  void answer() {}
 
   void ask() {
     inputQuestion();
@@ -257,11 +265,13 @@ struct askme_sys {
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
       } else if (choice == 1) {
-        user.printQuestions(2); // position of the user to whom the question was
-                                // asked in question vector
+        user.printQuestions(q_to_user); // position of the user to whom the
+                                      // question was asked in question vector
       } else if (choice == 2) {
-        user.printQuestions(1); // position of the user form whom the question
-                                // was asked in question vector
+        user.printQuestions(q_form_user); // position of the user form whom the
+                                        // question was asked in question vector
+      } else if (choice == 3) {
+        user.answer();
       } else if (choice == 5) {
         user.ask();
       } else if (choice == 6) {
