@@ -179,7 +179,7 @@ struct User {
     std::string line;
     std::string str_id = std::to_string(user_id);
 
-    while (std::getline(qfile, line) && line.find(str_id)) {
+    while (std::getline(qfile, line) && line.find(str_id) != std::string::npos) {
       int times = pos;
       std::stringstream ss(line);
       std::string tmp;
@@ -213,8 +213,7 @@ struct User {
     saveToQusetions();
   }
 
-  void printQuestionsToMe() {
-    int pos = 2;
+  void printQuestions(int pos) {
     auto questions = getQuestions(id, pos);
     for (auto line : questions) {
       getQuestionDataFromLine(line);
@@ -258,9 +257,11 @@ struct askme_sys {
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
       } else if (choice == 1) {
-        user.printQuestionsToMe();
-        // } else if (choice == 2) {
-        // user.printQuestions(true);
+        user.printQuestions(2); // position of the user to whom the question was
+                                // asked in question vector
+      } else if (choice == 2) {
+        user.printQuestions(1); // position of the user form whom the question
+                                // was asked in question vector
       } else if (choice == 5) {
         user.ask();
       } else if (choice == 6) {
