@@ -41,7 +41,7 @@ struct User {
   int id;
   bool aq;
 
-  void print() {
+  void printUsers() {
     std::fstream users = open_file(USERS_FILE);
     std::string user, tmp;
     while (std::getline(users, user)) {
@@ -145,6 +145,7 @@ struct User {
   }
 
   void inputQuestion() {
+    question.clear();
     std::string tmp;
     question.push_back(std::to_string(id)); // form
     std::cout << "Enter user id or -1 to cancel: ";
@@ -172,22 +173,21 @@ struct User {
     qfile.close();
   }
 
-  std::vector<std::string> getQuestions(int user_id) {
-    int to_user = 2;
+  std::vector<std::string> getQuestions(int user_id, int pos) {
     std::vector<std::string> v;
     std::fstream qfile = open_file(QUESTIONS_FILE);
     std::string line;
+    std::string str_id = std::to_string(user_id);
 
-    while (std::getline(qfile, line)) {
-      if (line.find(std::to_string(id))) {
-        std::stringstream ss(line);
-        std::string tmp;
-        while (to_user--) {
-          std::getline(ss, tmp, ',');
-        }
-        if (tmp == std::to_string(id))
-          v.push_back(line);
+    while (std::getline(qfile, line) && line.find(str_id)) {
+      int times = pos;
+      std::stringstream ss(line);
+      std::string tmp;
+      while (times--) {
+        std::getline(ss, tmp, ',');
       }
+      if (tmp == str_id)
+        v.push_back(line);
     }
 
     qfile.close();
@@ -195,6 +195,7 @@ struct User {
   }
 
   void getQuestionDataFromLine(std::string line) {
+    question.clear();
     std::string tmp;
     std::stringstream ss(line);
     while (std::getline(ss, tmp, ',')) {
@@ -202,18 +203,22 @@ struct User {
     }
   }
 
+  void printQuestion() {
+    std::cout << "Question Id (0) form user id(" << question.at(0)
+              << ") \t Question: " << question.at(3) << "\n";
+  }
+
   void ask() {
     inputQuestion();
     saveToQusetions();
   }
 
-  void printToMe() {
-    auto questions = getQuestions(id);
+  void printQuestionsToMe() {
+    int pos = 2;
+    auto questions = getQuestions(id, pos);
     for (auto line : questions) {
       getQuestionDataFromLine(line);
-      std::cout << "Question Id (0) form user id(" << question.at(0)
-                << ") \t Question: " << question.at(3) << "\n";
-                // << "Answer: " << question.at(4) << "\n";
+      printQuestion();
     }
   }
 };
@@ -253,11 +258,13 @@ struct askme_sys {
       } else if (choice == 2 && !logedin) {
         logedin = user.signup();
       } else if (choice == 1) {
-        user.printToMe();
+        user.printQuestionsToMe();
+        // } else if (choice == 2) {
+        // user.printQuestions(true);
       } else if (choice == 5) {
         user.ask();
       } else if (choice == 6) {
-        user.print();
+        user.printUsers();
       }
     }
   }
