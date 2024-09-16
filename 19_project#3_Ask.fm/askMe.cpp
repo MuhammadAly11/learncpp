@@ -37,6 +37,24 @@ std::string getLastLine(std::string File) {
   return last_line;
 }
 
+void removeLine(std::string filename, std::string line) {
+  std::vector<std::string> v;
+  auto qfile = open_file(filename);
+  std::string tmp;
+  while (std::getline(qfile, tmp)) {
+    if (tmp != line) {
+      v.push_back(tmp);
+    }
+  }
+  qfile.close();
+
+  qfile.open(filename, std::ios::out | std::ios::trunc);
+  for (auto x : v) {
+    qfile << x << "\n";
+  }
+  qfile.close();
+}
+
 struct User {
   std::vector<std::string> question; // id, from, to, n|t, qt, answers
   std::string user_name, name, password, email;
@@ -183,8 +201,10 @@ struct User {
     std::string line;
     std::string str_id = std::to_string(user_id);
 
-    while (std::getline(qfile, line) &&
-           line.find(str_id) != std::string::npos) {
+    while (std::getline(qfile, line)) {
+      if (line.find(str_id) == std::string::npos) {
+        continue;
+      }
       int times = pos;
       std::stringstream ss(line);
       std::string tmp;
@@ -241,6 +261,18 @@ struct User {
 
     qfile.close();
     return ret;
+  }
+
+  void remove() {
+    int str_id;
+    std::cout << "Enter question id or -1 to cancel: ";
+    std::cin >> str_id;
+    if (str_id == -1) {
+      return;
+    }
+    auto vec = getQuestions(str_id, q_id);
+    std::string line = vec.at(0);
+    removeLine(QUESTIONS_FILE, vec.at(0));
   }
 
   void answer() {
@@ -323,6 +355,8 @@ struct askme_sys {
                           // question was asked in question vector
       } else if (choice == 3) {
         user.answer();
+      } else if (choice == 4) {
+        user.remove();
       } else if (choice == 5) {
         user.ask();
       } else if (choice == 6) {
