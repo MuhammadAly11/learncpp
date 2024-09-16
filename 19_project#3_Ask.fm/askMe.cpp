@@ -285,6 +285,7 @@ struct User {
       return;
     }
     getQuestionDataFromLine(line);
+    removeLine(QUESTIONS_FILE, line);
     printQuestion();
     std::cout << "\n";
     if ((q_answer - 1) < question.size()) {
