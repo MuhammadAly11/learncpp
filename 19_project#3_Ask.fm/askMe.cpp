@@ -212,9 +212,59 @@ struct User {
     std::cout << "Question Id (" << question.at(q_id - 1) << ") form user id("
               << question.at(q_form_user - 1)
               << ") \t Question: " << question.at(q_text - 1) << "\n";
+    if (q_answer - 1 < question.size()) {
+      std::cout << "\t Answer: " << question.at(q_answer - 1) << "\n";
+    }
   }
 
-  void answer() {}
+  // takes position of colomn and substring and return the line
+  std::string get(std::string sub_str, int pos) {
+    std::string ret{}, tmp{"-1"};
+    auto qfile = open_file(QUESTIONS_FILE);
+    std::string line;
+
+    while (std::getline(qfile, line)) {
+      if (line.find(sub_str) == std::string::npos)
+        continue;
+
+      int times = pos;
+      std::stringstream ss(line);
+      while (times--) {
+        std::getline(ss, tmp, ',');
+      }
+
+      if (sub_str == tmp) {
+        ret = line;
+        break;
+      }
+    }
+
+    qfile.close();
+    return ret;
+  }
+
+  void answer() {
+    std::string id_str, ans;
+    std::cout << "Enter question id or -1 to cancel: ";
+    std::cin >> id_str;
+    std::string line = get(id_str, q_id);
+    if (line == "") {
+      std::cout << "Invalid question id.\n";
+      return;
+    }
+    getQuestionDataFromLine(line);
+    printQuestion();
+    std::cout << "\n";
+    if ((q_answer - 1) < question.size()) {
+      std::cout << "Warning: Already answered. Answer will be updated.\n";
+    }
+
+    std::cout << "Enter answer: ";
+    std::cin.ignore();
+    std::getline(std::cin, ans);
+    question.push_back(ans);
+    saveToQusetions();
+  }
 
   void ask() {
     inputQuestion();
@@ -266,10 +316,11 @@ struct askme_sys {
         logedin = user.signup();
       } else if (choice == 1) {
         user.printQuestions(q_to_user); // position of the user to whom the
-                                      // question was asked in question vector
-      } else if (choice == 2) {
-        user.printQuestions(q_form_user); // position of the user form whom the
                                         // question was asked in question vector
+      } else if (choice == 2) {
+        user.printQuestions(
+            q_form_user); // position of the user form whom the
+                          // question was asked in question vector
       } else if (choice == 3) {
         user.answer();
       } else if (choice == 5) {
