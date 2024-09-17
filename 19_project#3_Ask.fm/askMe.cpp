@@ -311,6 +311,16 @@ struct User {
       printQuestion();
     }
   }
+
+  void feed() {
+    auto qfile = open_file(QUESTIONS_FILE);
+    std::string line;
+
+    while (std::getline(qfile, line)) {
+      getQuestionDataFromLine(line);
+      printQuestion();
+    }
+  }
 };
 
 struct askme_sys {
@@ -362,6 +372,8 @@ struct askme_sys {
         user.ask();
       } else if (choice == 6) {
         user.printUsers();
+      } else if (choice == 7) {
+        user.feed();
       }
     }
   }
