@@ -164,6 +164,17 @@ struct User {
     return std::stoi(last_id);
   }
 
+  bool anon(std::string str_id) {
+    std::string userLine = get(USERS_FILE, str_id, 1), last_aq;
+    std::stringstream ss(userLine);
+    while (std::getline(ss, last_aq, ',')) {
+    }
+    if (last_aq == "1") {
+      return 1;
+    }
+    return 0;
+  }
+
   void inputQuestion() {
     question.clear();
     int last_question_id = lastId(QUESTIONS_FILE);
@@ -173,9 +184,10 @@ struct User {
     std::cout << "Enter user id or -1 to cancel: ";
     std::cin >> tmp;
     question.push_back(tmp); // to
-    // TODO: implemnt this
-    if (false)
-      std::cout << "Note: Anonymous question are not allowed for this user\n ";
+    if (tmp == "-1")
+      return;
+    if (!anon(tmp))
+      std::cout << "Note: Anonymous question are not allowed for this user\n";
     std::cout
         << "For thread question: Enter question id or -1 for new question: ";
     std::cin >> tmp;
@@ -238,9 +250,9 @@ struct User {
   }
 
   // takes position of colomn and substring and return the line
-  std::string get(std::string sub_str, int pos) {
+  std::string get(std::string file, std::string sub_str, int pos) {
     std::string ret{}, tmp{"-1"};
-    auto qfile = open_file(QUESTIONS_FILE);
+    auto qfile = open_file(file);
     std::string line;
 
     while (std::getline(qfile, line)) {
@@ -279,7 +291,7 @@ struct User {
     std::string id_str, ans;
     std::cout << "Enter question id or -1 to cancel: ";
     std::cin >> id_str;
-    std::string line = get(id_str, q_id);
+    std::string line = get(QUESTIONS_FILE, id_str, q_id);
     if (line == "") {
       std::cout << "Invalid question id.\n";
       return;
