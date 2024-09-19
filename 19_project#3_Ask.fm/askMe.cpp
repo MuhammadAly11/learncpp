@@ -241,9 +241,13 @@ struct User {
   }
 
   void printQuestion() {
-    std::cout << "Question Id (" << question.at(q_id - 1) << ") form user id("
-              << question.at(q_form_user - 1)
-              << ") \t Question: " << question.at(q_text - 1) << "\n";
+    std::cout << "Question Id (" << question.at(q_id - 1) << ") ";
+
+    if (anon(question.at(q_to_user - 1))) {
+      std::cout << "form user id(" << question.at(q_form_user - 1) << ") ";
+    }
+
+    std::cout << "\t Question: " << question.at(q_text - 1) << "\n";
     if (q_answer - 1 < question.size()) {
       std::cout << "\t Answer: " << question.at(q_answer - 1) << "\n";
     }
