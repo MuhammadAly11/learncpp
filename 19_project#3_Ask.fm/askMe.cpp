@@ -295,6 +295,8 @@ struct User {
     std::string id_str, ans;
     std::cout << "Enter question id or -1 to cancel: ";
     std::cin >> id_str;
+    if (id_str == "-1")
+      return;
     std::string line = get(QUESTIONS_FILE, id_str, q_id);
     if (line == "") {
       std::cout << "Invalid question id.\n";
