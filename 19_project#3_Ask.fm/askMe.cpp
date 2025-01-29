@@ -259,20 +259,12 @@ struct User {
     }
   }
 
-  void getQdata(std::string line) {
-    question.clear();
-    std::string item;
-    std::stringstream items(line);
-    while (std::getline(items, item, ',')) {
-      question.push_back(item);
-    }
-  }
-
   void buildThreads() {
     std::string line;
     auto qfile = open_file(QUESTIONS_FILE);
+    threads.clear();
     while (std::getline(qfile, line)) {
-      getQdata(line);
+      getQuestionDataFromLine(line);
       int parent_id = std::stoi(question.at(q_type - 1));
       if (parent_id == -1) {
         continue;
