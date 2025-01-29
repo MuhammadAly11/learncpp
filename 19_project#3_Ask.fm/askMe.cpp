@@ -177,7 +177,7 @@ struct User {
     return 0;
   }
 
-  void inputQuestion() {
+  bool inputQuestion() {
     question.clear();
     int last_question_id = lastId(QUESTIONS_FILE);
     question.push_back(std::to_string(++last_question_id)); // Q id
@@ -187,7 +187,7 @@ struct User {
     std::cin >> tmp;
     question.push_back(tmp); // to
     if (tmp == "-1")
-      return;
+      return false;
     if (!anon(tmp))
       std::cout << "Note: Anonymous question are not allowed for this user\n";
     std::cout
@@ -198,6 +198,7 @@ struct User {
     std::cin.ignore();
     std::getline(std::cin, tmp); // text of question
     question.push_back(tmp);
+    return true;
   }
 
   void saveToQusetions() {
@@ -360,8 +361,8 @@ struct User {
   }
 
   void ask() {
-    inputQuestion();
-    saveToQusetions();
+    if (inputQuestion())
+      saveToQusetions();
   }
 
   void printQuestions(int pos) {
