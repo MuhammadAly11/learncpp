@@ -3,6 +3,7 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -57,6 +58,7 @@ void removeLine(std::string filename, std::string line) {
 
 struct User {
   std::vector<std::string> question; // id, from, to, n|t, qt, answers
+  std::map<int, std::vector<int>> threads;
   std::string user_name, name, password, email;
   int id;
   bool aq;
@@ -241,15 +243,63 @@ struct User {
   }
 
   void printQuestion() {
-    std::cout << "Question Id (" << question.at(q_id - 1) << ") ";
+    int parent_id =std::stoi(question.at(q_type - 1)); 
+    if (parent_id != -1) {
+      printThreads(parent_id);
+      return;
+    }
 
+    std::cout << "Question Id (" << question.at(q_id - 1) << ") ";
     if (anon(question.at(q_to_user - 1))) {
       std::cout << "form user id(" << question.at(q_form_user - 1) << ") ";
     }
-
     std::cout << "\t Question: " << question.at(q_text - 1) << "\n";
     if (q_answer - 1 < question.size()) {
       std::cout << "\t Answer: " << question.at(q_answer - 1) << "\n";
+    }
+  }
+
+  void getQdata(std::string line) {
+    question.clear();
+    std::string item;
+    std::stringstream items(line);
+    while (std::getline(items, item, ',')) {
+      question.push_back(item);
+    }
+  }
+
+  void buildThreads() {
+    std::string line;
+    auto qfile = open_file(QUESTIONS_FILE);
+    while (std::getline(qfile, line)) {
+      getQdata(line);
+      int parent_id = std::stoi(question.at(q_type - 1));
+      if (parent_id == -1) {
+        continue;
+      }
+      int child_id = std::stoi(question.at(q_id - 1));
+
+      threads[parent_id].push_back(child_id);
+    }
+  }
+
+  void printThreads(int parent_id) {
+    buildThreads();
+
+    auto thread_qs = threads[parent_id];
+    for (auto child_id : thread_qs) {
+      std::string line = get(QUESTIONS_FILE, std::to_string(child_id), q_id);
+      getQuestionDataFromLine(line);
+
+      std::cout << "\t Thread: Question Id (" << question.at(q_id - 1) << ") ";
+      if (anon(question.at(q_to_user - 1))) {
+        std::cout << "form user id(" << question.at(q_form_user - 1) << ") ";
+      }
+      std::cout << "\t Question: " << question.at(q_text - 1) << "\n";
+      if (q_answer - 1 < question.size()) {
+        std::cout << "\t Thread: \t Answer: " << question.at(q_answer - 1)
+                  << "\n";
+      }
     }
   }
 
