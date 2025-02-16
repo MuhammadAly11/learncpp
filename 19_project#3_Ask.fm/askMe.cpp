@@ -1,3 +1,4 @@
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -27,15 +28,14 @@ std::fstream open_file(std::string outFile, bool write = false) {
   return usersio;
 }
 
-std::string getLastLine(std::string File) {
+bool isEmpty(std::string File) {
   std::fstream users = open_file(File);
-  std::string last_line, cur_line;
-  while (std::getline(users, cur_line)) {
-    if (!cur_line.empty())
-      last_line = cur_line;
-  }
+  std::string cur_line;
+  std::getline(users, cur_line);
+  if (cur_line.empty())
+      return true;
   users.close();
-  return last_line;
+  return false;
 }
 
 void removeLine(std::string filename, std::string line) {
@@ -157,13 +157,22 @@ struct User {
   }
 
   int lastId(std::string file) {
-    std::string last_user = getLastLine(file);
-    if (last_user.empty())
-      return 100;
-    std::stringstream ss(last_user);
-    std::string last_id;
-    std::getline(ss, last_id, ',');
-    return std::stoi(last_id);
+    if (isEmpty(file))
+        return 1;
+
+    std::fstream users = open_file(file);
+    std::string cur_line;
+    int max_id = INT_MIN;
+    while (std::getline(users, cur_line)) {
+        if (!cur_line.empty()) {
+            std::stringstream ss(cur_line);
+            std::string text_id;
+            std::getline(ss, text_id, ',');
+            max_id = std::max(max_id, std::stoi(text_id));
+        }
+    }
+    users.close();
+    return max_id;
   }
 
   bool anon(std::string str_id) {
@@ -244,7 +253,7 @@ struct User {
   }
 
   void printQuestion() {
-    int parent_id =std::stoi(question.at(q_type - 1)); 
+    int parent_id = std::stoi(question.at(q_type - 1));
     if (parent_id != -1) {
       printThreads(parent_id);
       return;
@@ -356,7 +365,11 @@ struct User {
     std::cout << "Enter answer: ";
     std::cin.ignore();
     std::getline(std::cin, ans);
-    question.push_back(ans);
+    if (question.size() >= q_answer) {
+        question[q_answer - 1] = ans;
+    } else {
+        question.push_back(ans);
+    }
     saveToQusetions();
   }
 
