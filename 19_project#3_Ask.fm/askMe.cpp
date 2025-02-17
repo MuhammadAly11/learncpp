@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
@@ -36,6 +37,34 @@ bool isEmpty(std::string File) {
       return true;
   users.close();
   return false;
+}
+
+bool compareByID(const std::string &line1, const std::string &line2) {
+  std::string id1, id2;
+  std::stringstream s1(line1);
+  std::getline(s1, id1, ',');
+
+  std::stringstream s2(line2);
+  std::getline(s2, id2, ',');
+  return std::stoi(id1) < std::stoi(id2);
+}
+void sortFile(std::string filename) {
+  std::vector<std::string> v;
+  auto qfile = open_file(filename);
+    std::string tmp;
+    while (std::getline(qfile, tmp)) {
+      v.push_back(tmp);
+    }
+    qfile.close();
+
+    // comparing
+    std::sort(v.begin(), v.end(), compareByID);
+
+    qfile.open(filename, std::ios::out | std::ios::trunc);
+      for (auto x : v) {
+        qfile << x << "\n";
+      }
+      qfile.close();
 }
 
 void removeLine(std::string filename, std::string line) {
@@ -217,6 +246,7 @@ struct User {
     }
     qfile << "\n";
     qfile.close();
+    sortFile(QUESTIONS_FILE);
   }
 
   std::vector<std::string> getQuestions(int user_id, int pos) {
@@ -341,6 +371,7 @@ struct User {
     auto vec = getQuestions(str_id, q_id);
     std::string line = vec.at(0);
     removeLine(QUESTIONS_FILE, vec.at(0));
+    sortFile(QUESTIONS_FILE);
   }
 
   void answer() {

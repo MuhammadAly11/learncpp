@@ -4,3 +4,4 @@
 
 - [x] doesn't keep largest question number
 - [x] append answers in the file instead of replacing them
+- [ ] the thread doesn't print corrently under it's parent
