@@ -284,8 +284,8 @@ struct User {
 
   void printQuestion() {
     int parent_id = std::stoi(question.at(q_type - 1));
+    int curQ_id = std::stoi(question.at(q_id - 1));
     if (parent_id != -1) {
-      printThreads(parent_id);
       return;
     }
 
@@ -297,6 +297,8 @@ struct User {
     if (q_answer - 1 < question.size()) {
       std::cout << "\t Answer: " << question.at(q_answer - 1) << "\n";
     }
+
+    printThreads(curQ_id);
   }
 
   void buildThreads() {
@@ -316,7 +318,6 @@ struct User {
   }
 
   void printThreads(int parent_id) {
-    buildThreads();
 
     auto thread_qs = threads[parent_id];
     for (auto child_id : thread_qs) {
@@ -410,6 +411,7 @@ struct User {
   }
 
   void printQuestions(int pos) {
+    buildThreads();
     auto questions = getQuestions(id, pos);
     for (auto line : questions) {
       getQuestionDataFromLine(line);
@@ -418,6 +420,7 @@ struct User {
   }
 
   void feed() {
+    buildThreads();
     auto qfile = open_file(QUESTIONS_FILE);
     std::string line;
 
