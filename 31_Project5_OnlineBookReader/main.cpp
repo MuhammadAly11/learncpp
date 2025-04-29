@@ -9,6 +9,7 @@ enum class LoginStatus { LOGED_IN, LOGED_OUT };
 enum class UserStatus { ADMIN, USER };
 
 std::string UsedUsernameErr = "This username is already used.";
+std::string CredntialsErr = "Incorrect username or password";
 
 class UserData {
 private:
@@ -39,14 +40,16 @@ public:
 
 class UserView {
 public:
-  int printMenu(UserData &data) {
+  int userMenu(UserData &data) {
     int choice;
     showProfileLine(data);
     std::cout << "\nMenu:\n"
-              << "\t 1: View Profile"
-              << "\t 2: List & Select from my reading history"
-              << "\t 3: List & Select from available books"
-              << "\t 4: Logout";
+              << "\t 1: View Profile\n"
+              << "\t 2: List & Select from my reading history\n"
+              << "\t 3: List & Select from available books\n"
+              << "\t 4: Logout\n"
+              << "\nEnter number in range 1 - 4: ";
+    std::cin >> choice;
     return choice;
   }
   void showProfileLine(UserData &data) {
@@ -56,6 +59,10 @@ public:
     else
       view = "Admin";
     std::cout << "\nHello " << data.getUsername() << " | " << view << " View\n";
+  }
+  void viewProfile(UserData &data) {
+    std::cout << "\nName: " << data.getName() << "\nEmail: " << data.getEmail()
+              << "\nUsername: " << data.getUsername();
   }
   void listHistory() {}
   void listBooks() {}
@@ -89,6 +96,17 @@ public:
     user.setEmail(tmp);
   }
 
+  void inputLogin(UserData &user) {
+    std::string tmp;
+
+    std::cout << "Enter username (no spaces): ";
+    std::cin >> tmp;
+    user.setUsername(tmp);
+    std::cout << "Enter password (no spaces): ";
+    std::cin >> tmp;
+    user.setPassword(tmp);
+  }
+
   void printError(std::string &err) {
     std::cout << "\n" << "Error: " << err << "\n";
   }
@@ -99,11 +117,26 @@ private:
   std::vector<UserData> users;
 
 public:
-  bool add(UserData &curUser) {
-    if (findUser(curUser.getUsername()) != nullptr) {
+  bool isAded(UserData &data) {
+    if (findUser(data.getUsername()) != nullptr) {
+      return true;
+    }
+    return false;
+  }
+
+  bool add(UserData &data) {
+    if (isAded(data)) {
       return false;
     }
-    users.push_back(curUser);
+    users.push_back(data);
+    return true;
+  }
+
+  bool isCorrect(UserData data) {
+    UserData *dataPtr = findUser(data.getUsername());
+    if (dataPtr == nullptr || data.getPassword() != dataPtr->getPassword()) {
+      return false;
+    }
     return true;
   }
 
@@ -140,7 +173,29 @@ public:
     }
   }
 
+  UserData *addUser(UserData &data) {
+    if (userModel.add(data)) {
+      return userModel.findUser(data.getUsername());
+    } else {
+      userView.printError(UsedUsernameErr);
+      return nullptr;
+    }
+  }
+
+  UserData *login() {
+    UserData data;
+    while (true) {
+      userView.inputLogin(data);
+      if (userModel.isCorrect(data)) {
+        return userModel.findUser(data.getUsername());
+      }
+      userView.printError(CredntialsErr);
+    }
+  }
+
   int startMenu() { return userView.startMenu(); }
+  int menu(UserData &data) { return userView.userMenu(data); }
+  void viewProfile(UserData &data) { userView.viewProfile(data); }
 };
 
 class systemManager {
@@ -150,7 +205,15 @@ private:
   LoginStatus loginStatus = LoginStatus::LOGED_OUT;
 
 public:
-  systemManager() {}
+  systemManager() {
+    // hardcode the some users
+    UserData admin("Admin", "admin@bookshop.com", "admin", "Password",
+                   UserStatus::ADMIN);
+    UserData user("user1", "user1@bookshop.com", "user1", "userpass",
+                  UserStatus::USER);
+    userController.addUser(admin);
+    userController.addUser(user);
+  }
   ~systemManager() { currentUser = nullptr; }
 
   void run() {
@@ -166,6 +229,15 @@ public:
           break;
         }
       }
+
+      int choice = userController.menu(*currentUser);
+      switch (choice) {
+      case 1:
+        userController.viewProfile(*currentUser);
+        break;
+      case 4:
+        return;
+      }
     }
   }
 
@@ -174,7 +246,10 @@ public:
     loginStatus = LoginStatus::LOGED_IN;
   }
 
-  void handelLogin() {}
+  void handelLogin() {
+    currentUser = userController.login();
+    loginStatus = LoginStatus::LOGED_IN;
+  }
 };
 
 int main() {
