@@ -236,7 +236,9 @@ public:
         userController.viewProfile(*currentUser);
         break;
       case 4:
-        return;
+        loginStatus = LoginStatus::LOGED_OUT;
+        currentUser = nullptr;
+        break;
       }
     }
   }
