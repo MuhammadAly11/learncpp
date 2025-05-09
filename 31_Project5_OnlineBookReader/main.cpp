@@ -11,6 +11,65 @@ enum class UserStatus { ADMIN, USER };
 std::string UsedUsernameErr = "This username is already used.";
 std::string CredntialsErr = "Incorrect username or password";
 
+class BookData {
+private:
+  std::vector<std::string> pages;
+  std::string name;
+  std::string ISBN;
+  std::string author;
+  int pagesNum;
+
+public:
+  BookData() {}
+  BookData(std::string name, std::string author, std::string ISBN, int pagesNum,
+           std::vector<std::string> pages)
+      : name(name), author(author), ISBN(ISBN), pagesNum(pagesNum),
+        pages(pages) {}
+
+  int getPageNums() { return pagesNum; }
+  void getPage(std::string content, int page) { content = pages.at(page); }
+};
+
+class BookModel {
+private:
+  std::vector<BookData> books;
+
+public:
+};
+
+class BookViewer {
+public:
+  void viewPage(BookData &book, int page = 1) {
+    std::cout << "Current Page: " << page << "/" << book.getPageNums() << "\n";
+    std::string content;
+    int choice = bookMenu();
+
+    book.getPage(content, page);
+    std::cout << content;
+  }
+
+  int bookMenu() {
+    std::cout << "Menu:\n"
+              << "\t1: Next Page"
+              << "\t2: Previous Page"
+              << "\t3: Stop Reading\n"
+              << "\nEnter number in range 1 - 3: ";
+
+    int choice;
+    std::cin >> choice;
+    return choice;
+  }
+};
+
+class BookController {
+private:
+  BookModel model;
+  BookViewer viewer;
+
+public:
+  void readBook() {}
+};
+
 class UserData {
 private:
   std::string name;
