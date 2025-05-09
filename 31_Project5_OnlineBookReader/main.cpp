@@ -26,8 +26,11 @@ public:
       : name(name), author(author), ISBN(ISBN), pagesNum(pagesNum),
         pages(pages) {}
 
-  int getPageNums() { return pagesNum; }
-  void getPage(std::string content, int page) { content = pages.at(page); }
+  int getPageNums() const { return pagesNum; }
+  std::string getName() const { return name; }
+  void getPage(std::string &content, int page) const {
+    content = pages.at(--page);
+  }
 };
 
 class BookModel {
@@ -35,28 +38,52 @@ private:
   std::vector<BookData> books;
 
 public:
+  void addBook(BookData &book) { books.push_back(book); }
+
+  std::vector<std::string> listBooks() {
+    std::vector<std::string> list;
+    for (auto &x : books) {
+      list.push_back(x.getName());
+    }
+    return list;
+  }
+
+  BookData &getBookByIndex(int idx) { return books.at(idx); }
 };
 
 class BookViewer {
 public:
-  void viewPage(BookData &book, int page = 1) {
-    std::cout << "Current Page: " << page << "/" << book.getPageNums() << "\n";
+  void viewPage(const BookData &book, int pageNum = 1) {
+    std::cout << "\nCurrent Page: " << pageNum << "/" << book.getPageNums()
+              << "\n";
     std::string content;
-    int choice = bookMenu();
 
-    book.getPage(content, page);
-    std::cout << content;
+    book.getPage(content, pageNum);
+    std::cout << content << "\n";
   }
 
   int bookMenu() {
-    std::cout << "Menu:\n"
-              << "\t1: Next Page"
-              << "\t2: Previous Page"
+    std::cout << "\nMenu:\n"
+              << "\t1: Next Page\n"
+              << "\t2: Previous Page\n"
               << "\t3: Stop Reading\n"
               << "\nEnter number in range 1 - 3: ";
 
     int choice;
     std::cin >> choice;
+    return choice;
+  }
+
+  int listBooks(std::vector<std::string> list) {
+    int choice, i = 0;
+    std::cout << "Our current book collection: \n";
+    for (auto x : list) {
+      std::cout << "\t" << ++i << " " << x << "\n";
+    }
+    std::cout << "\nWhich book to read\n"
+              << "Enter number in range 1 - " << i << ": ";
+    std::cin >> choice;
+
     return choice;
   }
 };
@@ -67,7 +94,26 @@ private:
   BookViewer viewer;
 
 public:
-  void readBook() {}
+  // TODO: implement this func
+  //
+  void addBook(BookData &book) { model.addBook(book); }
+
+  void readBook() {
+    auto list = model.listBooks();
+    int bookNum = viewer.listBooks(list);
+    auto curBook = model.getBookByIndex(bookNum);
+
+    int choice = -1, curPage = 1;
+    while (choice != 3) {
+      viewer.viewPage(curBook, curPage);
+      choice = viewer.bookMenu();
+
+      if (choice == 1)
+        curPage++;
+      if (choice == 2)
+        curPage--;
+    }
+  }
 };
 
 class UserData {
@@ -261,6 +307,7 @@ class systemManager {
 private:
   UserData *currentUser = nullptr;
   UserController userController;
+  BookController bookCtrl;
   LoginStatus loginStatus = LoginStatus::LOGED_OUT;
 
 public:
@@ -272,6 +319,12 @@ public:
                   UserStatus::USER);
     userController.addUser(admin);
     userController.addUser(user);
+    std::vector<std::string> pages = {"The first page", "The second page",
+                                      "The third page"};
+    BookData a("first book", "the autor", "ISBN_892374", 3, pages);
+    BookData b("2nd book", "2nd autor", "ISBN_89asdf2374", 3, pages);
+    bookCtrl.addBook(a);
+    bookCtrl.addBook(b);
   }
   ~systemManager() { currentUser = nullptr; }
 
@@ -293,6 +346,9 @@ public:
       switch (choice) {
       case 1:
         userController.viewProfile(*currentUser);
+        break;
+      case 3:
+        bookCtrl.readBook();
         break;
       case 4:
         loginStatus = LoginStatus::LOGED_OUT;
