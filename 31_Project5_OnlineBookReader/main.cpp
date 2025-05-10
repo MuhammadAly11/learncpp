@@ -1,7 +1,10 @@
 /*  This project focuses on design and doesn't care
  *  about details like spaces in string
  *  I will try implementing it using MVC pattern*/
+#include <ctime>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -51,6 +54,28 @@ public:
   BookData &getBookByIndex(int idx) { return books.at(idx); }
 };
 
+class SessionData {
+private:
+  const BookData *const book;
+  int curPage;
+  std::time_t lastTime;
+
+public:
+  SessionData(int curPage, std::time_t lastTime, const BookData *book)
+      : curPage(curPage), lastTime(lastTime), book(book) {}
+
+  std::string getLastTime() {
+    auto time = localtime(&lastTime);
+    std::ostringstream oss;
+    oss << std::put_time(time, "%Y-%m-%d %H:%M:%S");
+    return oss.str();
+  }
+  int getCurPage() const { return curPage; }
+  int getPagesNum() const { return book->getPageNums(); }
+  const std::string getBookNmae() const { return book->getName(); }
+  const BookData *getBook() const { return book; }
+};
+
 class BookViewer {
 public:
   void viewPage(const BookData &book, int pageNum = 1) {
@@ -94,24 +119,36 @@ private:
   BookViewer viewer;
 
 public:
-  // TODO: implement this func
-  //
   void addBook(BookData &book) { model.addBook(book); }
 
-  void readBook() {
-    auto list = model.listBooks();
-    int bookNum = viewer.listBooks(list);
-    auto curBook = model.getBookByIndex(bookNum);
+  SessionData *readBook(const SessionData *session) {
+    const BookData *curBook = nullptr;
+    int curPage = 1;
 
-    int choice = -1, curPage = 1;
-    while (choice != 3) {
-      viewer.viewPage(curBook, curPage);
+    if (session == nullptr) {
+      auto list = model.listBooks();
+      int bookNum = viewer.listBooks(list);
+      curBook = &model.getBookByIndex(bookNum);
+    } else {
+      curBook = session->getBook();
+      curPage = session->getCurPage();
+    }
+
+    int choice = -1;
+    SessionData *newSession = nullptr;
+    while (true) {
+      viewer.viewPage(*curBook, curPage);
       choice = viewer.bookMenu();
 
       if (choice == 1)
         curPage++;
-      if (choice == 2)
+      else if (choice == 2)
         curPage--;
+      else if (choice == 3) {
+        std::time_t lastRead = time(nullptr);
+        newSession = new SessionData(curPage, lastRead, curBook);
+        return newSession;
+      }
     }
   }
 };
@@ -122,6 +159,7 @@ private:
   std::string email;
   std::string username;
   std::string password;
+  std::vector<SessionData> sessions;
   UserStatus status;
 
 public:
@@ -136,11 +174,14 @@ public:
   std::string getUsername() const { return username; }
   std::string getPassword() const { return password; }
   UserStatus getStatus() const { return status; }
+  const std::vector<SessionData> &getSessions() { return sessions; }
+  const SessionData &getSeesionByIdx(int n) { return sessions.at(n); }
 
   void setName(const std::string &name) { this->name = name; }
   void setEmail(const std::string &email) { this->email = email; }
   void setUsername(const std::string &username) { this->username = username; }
   void setPassword(const std::string &password) { this->password = password; }
+  void addSession(const SessionData &session) { sessions.push_back(session); }
 };
 
 class UserView {
@@ -157,6 +198,7 @@ public:
     std::cin >> choice;
     return choice;
   }
+
   void showProfileLine(UserData &data) {
     std::string view;
     if (data.getStatus() == UserStatus::USER)
@@ -165,12 +207,32 @@ public:
       view = "Admin";
     std::cout << "\nHello " << data.getUsername() << " | " << view << " View\n";
   }
+
   void viewProfile(UserData &data) {
     std::cout << "\nName: " << data.getName() << "\nEmail: " << data.getEmail()
               << "\nUsername: " << data.getUsername();
   }
-  void listHistory() {}
-  void listBooks() {}
+
+  int listSessions(UserData &data) {
+    std::cout << "\n";
+    auto sessions = data.getSessions();
+
+    if (sessions.empty()) {
+      std::cout << "You have no reading history yet.\n";
+      return -1;
+    }
+
+    int i = 0, choice;
+    for (auto session : sessions) {
+      std::cout << ++i << ": " << session.getBookNmae() << ": "
+                << session.getCurPage() << "/" << session.getPagesNum() << " - "
+                << session.getLastTime() << "\n";
+    }
+    std::cout << "\nWhich sessiont to open?\n"
+              << "Enter number in range 1 - " << i << ": ";
+    std::cin >> choice;
+    return choice - 1; // to be index
+  }
 
   int startMenu() {
     std::cout << "\nMenu:\n"
@@ -298,6 +360,18 @@ public:
     }
   }
 
+  const SessionData *chooseSessions(UserData &data) {
+    int choice = userView.listSessions(data);
+    if (choice == -1) {
+      return nullptr;
+    }
+    auto *session = &data.getSeesionByIdx(choice);
+    return session;
+  }
+
+  void saveSession(UserData &data, const SessionData *session) {
+    data.addSession(*session);
+  }
   int startMenu() { return userView.startMenu(); }
   int menu(UserData &data) { return userView.userMenu(data); }
   void viewProfile(UserData &data) { userView.viewProfile(data); }
@@ -347,9 +421,26 @@ public:
       case 1:
         userController.viewProfile(*currentUser);
         break;
-      case 3:
-        bookCtrl.readBook();
-        break;
+      case 2: {
+        auto session = userController.chooseSessions(*currentUser);
+        if (session == nullptr) {
+          break;
+        }
+        session = bookCtrl.readBook(session);
+        userController.saveSession(*currentUser, session);
+        if (session != nullptr) {
+          delete session;
+          session = nullptr;
+        }
+      } break;
+      case 3: {
+        auto session = bookCtrl.readBook(nullptr);
+        userController.saveSession(*currentUser, session);
+        if (session != nullptr) {
+          delete session;
+          session = nullptr;
+        }
+      } break;
       case 4:
         loginStatus = LoginStatus::LOGED_OUT;
         currentUser = nullptr;
